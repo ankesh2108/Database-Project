@@ -1,6 +1,7 @@
 package com.dbmsproject.controller;
 
 import com.dbmsproject.dataholders.Grocery;
+import com.dbmsproject.dataholders.Members;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,6 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
@@ -20,7 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
-public class Controller implements Initializable {
+public class MainController implements Initializable {
 	@FXML
 	private TextField tf_item_name;
 	@FXML
@@ -57,6 +59,8 @@ public class Controller implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		showGroceryInTable();
+		setMembersInComboBox();
+
 	}
 
 
@@ -182,21 +186,29 @@ public class Controller implements Initializable {
 	public void editMembers() {
 		Parent root;
 		try {
-			FXMLLoader fxmlLoader = new FXMLLoader();
-			fxmlLoader.setLocation(getClass().getResource("edit_members.fxml"));
-			/*
-			 * if "fx:controller" is not set in fxml
-			 * fxmlLoader.setController(NewWindowController);
-			 */
-			Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+			root = FXMLLoader.load(getClass().getClassLoader().getResource("com/dbmsproject/fxml/edit_members.fxml"));
 			Stage stage = new Stage();
 			stage.setTitle("Edit Members");
-			stage.setScene(scene);
+			stage.setScene(new Scene(root, 600, 400));
 			stage.show();
-
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
+
+	public void setMembersInComboBox() {
+		EditMembers editMembers = new EditMembers();
+
+		ObservableList<Members> membersObservableList = editMembers.getAllMembers();
+		ObservableList<String> comboBoxValues = FXCollections.observableArrayList();
+	//	ComboBox<Members> comboBox = new ComboBox<>(comboBoxValues);
+		for(Members members : membersObservableList) {
+			comboBoxValues.add(members.getMemName());
+		}
+		cb_family_member.setItems(comboBoxValues);
+	}
+
+
 }

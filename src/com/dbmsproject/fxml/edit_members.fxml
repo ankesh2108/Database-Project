@@ -7,7 +7,7 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dbmsproject.controller.EditMembers">
    <children>
-      <TableView fx:id="tv_members" layoutX="7.0" layoutY="14.0" prefHeight="287.0" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="50.0">
+      <TableView fx:id="tv_members" layoutX="7.0" layoutY="14.0" onMouseClicked="#handleMouseAction" prefHeight="287.0" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="50.0">
         <columns>
           <TableColumn fx:id="col_sr_no" prefWidth="62.600008964538574" text="Sr.No." />
           <TableColumn fx:id="col_member_name" prefWidth="516.5999908447266" text="Name" />
