@@ -1,6 +1,6 @@
 package com.dbmsproject;
 
-import com.dbmsproject.Controller;
+import com.dbmsproject.controller.Controller;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,9 +19,9 @@ public class Main extends Application {
       //  controller =fxmlLoader.getController();
 
 
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("fxml/sample.fxml"));
         primaryStage.setTitle("Household Grocery Manager");
-        primaryStage.setScene(new Scene(root, 1000, 600));
+        primaryStage.setScene(new Scene(root, 1200, 800));
         primaryStage.setResizable(false);
         primaryStage.show();
 

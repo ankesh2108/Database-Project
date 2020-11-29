@@ -1,13 +1,19 @@
-package com.dbmsproject;
+package com.dbmsproject.controller;
 
+import com.dbmsproject.dataholders.Grocery;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import java.time.LocalDate;
@@ -170,5 +176,27 @@ public class Controller implements Initializable {
 		dp_date.setValue(date);
 		cb_family_member.setValue(currentlySelectedGrocery.getOrderBy());
 
+	}
+
+
+	public void editMembers() {
+		Parent root;
+		try {
+			FXMLLoader fxmlLoader = new FXMLLoader();
+			fxmlLoader.setLocation(getClass().getResource("edit_members.fxml"));
+			/*
+			 * if "fx:controller" is not set in fxml
+			 * fxmlLoader.setController(NewWindowController);
+			 */
+			Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+			Stage stage = new Stage();
+			stage.setTitle("Edit Members");
+			stage.setScene(scene);
+			stage.show();
+
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -1,4 +1,4 @@
-package com.dbmsproject;
+package com.dbmsproject.dataholders;
 
 public class Grocery {
 

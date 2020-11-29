@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane style="-fx-background-color: #ede7f6;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dbmsproject.Controller">
+<AnchorPane style="-fx-background-color: #ede7f6;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dbmsproject.controller.Controller">
     <children>
         <TableView fx:id="tableView_grocery" layoutY="281.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#handleMouseAction" prefHeight="283.0" prefWidth="1066.0" AnchorPane.bottomAnchor="84.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="281.0">
             <columns>
@@ -34,7 +34,7 @@
                      <graphic>
                         <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@icons/add.png" />
+                              <Image url="@../icons/add.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -49,7 +49,7 @@
                      <graphic>
                         <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@icons/update.png" />
+                              <Image url="@../icons/update.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -169,7 +169,7 @@
          <graphic>
             <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                              <Image url="@icons/deleten.png" />
+                              <Image url="@../icons/deleten.png" />
                </image>
             </ImageView>
          </graphic>
