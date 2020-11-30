@@ -8,15 +8,18 @@ public class Grocery {
 	private float price;
 	private String date;
 	private String orderBy;
+	private String category;
 
-	public Grocery(int id, String item_name, int quantity, float price, String date, String orderBy) {
+	public Grocery(int id, String item_name, int quantity, float price, String date, String orderBy, String category) {
 		this.id = id;
 		this.item_name = item_name;
 		this.quantity = quantity;
 		this.price = price;
 		this.date = date;
 		this.orderBy = orderBy;
+		this.category = category;
 	}
+
 
 
 	public int getId() {
@@ -41,5 +44,9 @@ public class Grocery {
 
 	public String getOrderBy() {
 		return orderBy;
+	}
+
+	public String getCategory() {
+		return category;
 	}
 }

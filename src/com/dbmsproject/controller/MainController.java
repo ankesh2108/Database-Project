@@ -1,5 +1,6 @@
 package com.dbmsproject.controller;
 
+import com.dbmsproject.dataholders.Categories;
 import com.dbmsproject.dataholders.Grocery;
 import com.dbmsproject.dataholders.Members;
 import javafx.collections.FXCollections;
@@ -11,7 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.effect.DropShadow;
+
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
@@ -20,9 +21,13 @@ import java.net.URL;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainController implements Initializable {
+
+	@FXML
+	private ComboBox cb_category;
 	@FXML
 	private TextField tf_item_name;
 	@FXML
@@ -48,19 +53,51 @@ public class MainController implements Initializable {
 	@FXML
 	private TableColumn<Grocery, String> col_orderedby;
 	@FXML
+	public TableColumn<Grocery, String> col_category;
+	@FXML
 	private Button btn_add;
 	@FXML
 	private Button btn_update;
 	@FXML
 	private Button btn_delete;
 
-	private Grocery currentlySelectedGrocery=null;
+	private Grocery currentlySelectedGrocery = null;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		showGroceryInTable();
 		setMembersInComboBox();
+		setCategoriesInComboBox();
+	}
 
+	private void setCategoriesInComboBox() {
+
+		ObservableList<Categories> allCategoriesList = FXCollections.observableArrayList();
+		Connection connection = getConnection();
+
+		Statement st;
+		ResultSet rs;
+		String query = "SELECT * FROM categories";
+
+		try {
+			st = connection.createStatement();
+			rs = st.executeQuery(query);
+
+			while (rs.next()) {
+
+				Categories categories = new Categories(rs.getInt("cat_id"), rs.getString("cat_name"));
+				allCategoriesList.add(categories);
+			}
+		} catch (SQLException throwables) {
+			throwables.printStackTrace();
+		}
+
+		ObservableList<String> categoriesComBox = FXCollections.observableArrayList();
+
+		for (Categories categories : allCategoriesList) {
+			categoriesComBox.add(categories.getCat_name());
+		}
+		cb_category.setItems(categoriesComBox);
 	}
 
 
@@ -75,6 +112,20 @@ public class MainController implements Initializable {
 		}
 	}
 
+	public void showGroceryInTable() {
+		ObservableList<Grocery> groceryList = getAllGroceries();
+
+		col_id.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("id"));
+		col_itemname.setCellValueFactory(new PropertyValueFactory<Grocery, String>("item_name"));
+		col_quantity.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("quantity"));
+		col_price.setCellValueFactory(new PropertyValueFactory<Grocery, Float>("price"));
+		col_date.setCellValueFactory(new PropertyValueFactory<Grocery, String>("date"));
+		col_orderedby.setCellValueFactory(new PropertyValueFactory<Grocery, String>("orderBy"));
+		col_category.setCellValueFactory(new PropertyValueFactory<Grocery, String>("category"));
+
+		tableView_grocery.setItems(groceryList);
+	}
+
 
 	public ObservableList<Grocery> getAllGroceries() {
 
@@ -82,7 +133,8 @@ public class MainController implements Initializable {
 		ObservableList<Grocery> groceryObservableList = FXCollections.observableArrayList();
 
 		Connection conn = getConnection();
-		String query = "SELECT * FROM grocery";
+		//String query1 = "SELECT * FROM grocery";
+		String query = "SELECT grocery.id, grocery.item_name, grocery.quantity, grocery.price, grocery.ordered_date, members.mem_name, categories.cat_name FROM grocery JOIN members JOIN categories ON grocery.mem_id = members.mem_id AND grocery.cat_id = categories.cat_id";
 		Statement st;
 		ResultSet resultSet;
 
@@ -97,39 +149,40 @@ public class MainController implements Initializable {
 						resultSet.getInt("quantity"),
 						resultSet.getFloat("price"),
 						resultSet.getString("ordered_date"),
-						resultSet.getString("ordered_by"));
+						resultSet.getString(6),
+						resultSet.getString(7));
 
 				groceryObservableList.add(grocery);
 			}
 
-		} catch (SQLException throwables) {
-			throwables.printStackTrace();
+		} catch (SQLException throwable) {
+			throwable.printStackTrace();
 		}
 
 		return groceryObservableList;
 	}
 
-	public void showGroceryInTable() {
-		ObservableList<Grocery> groceryList = getAllGroceries();
-
-		col_id.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("id"));
-		col_itemname.setCellValueFactory(new PropertyValueFactory<Grocery, String>("item_name"));
-		col_quantity.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("quantity"));
-		col_price.setCellValueFactory(new PropertyValueFactory<Grocery, Float>("price"));
-		col_date.setCellValueFactory(new PropertyValueFactory<Grocery, String>("date"));
-		col_orderedby.setCellValueFactory(new PropertyValueFactory<Grocery, String>("orderBy"));
-
-		tableView_grocery.setItems(groceryList);
-	}
 
 	public void insertGrocery() {
+
+		if (areFieldsEmpty()) {
+			Alert alert = new Alert(Alert.AlertType.WARNING);
+			alert.setTitle("Empty fields");
+			alert.setHeaderText(null);
+			alert.setContentText("Please fill the data in all the fields");
+			alert.showAndWait();
+			return;
+		}
+
+
 		String date = dp_date.getValue() + "";
 
-		String query = "INSERT INTO grocery(item_name, quantity, price, ordered_date, ordered_by) values('" + tf_item_name.getText() + "',"
+		String query = "INSERT INTO grocery(item_name, quantity, price, ordered_date, mem_id, cat_id) values('" + tf_item_name.getText() + "',"
 				+ tf_quantity.getText() + ","
 				+ tf_price.getText() + ",'"
-				+ date + "','"
-				+ cb_family_member.getValue() + "')";
+				+ date + "',"
+				+ "(SELECT mem_id FROM members WHERE mem_name = '" + cb_family_member.getValue() + "'),"
+				+ "(SELECT cat_id FROM categories WHERE cat_name = '" + cb_category.getValue() + "'))";
 
 		executeMyQuery(query);
 		showGroceryInTable();
@@ -137,24 +190,58 @@ public class MainController implements Initializable {
 
 
 	public void updateGrocery() {
-		String query = "UPDATE grocery set item_name = '"+ tf_item_name.getText()
-				+"', quantity= "+tf_quantity.getText()
-				+", price= "+tf_price.getText()
-				+", ordered_date= '"+dp_date.getValue()
-				+"', ordered_by= '"+cb_family_member.getValue()
-				+"' where id = "+currentlySelectedGrocery.getId();
+		if (areFieldsEmpty()) {
+			Alert alert = new Alert(Alert.AlertType.WARNING);
+			alert.setTitle("Empty fields");
+			alert.setHeaderText(null);
+			alert.setContentText("Please fill the data in all the fields");
+			alert.showAndWait();
+			return;
+		}
+
+
+		String query = "UPDATE grocery set item_name = '" + tf_item_name.getText()
+				+ "', quantity= " + tf_quantity.getText()
+				+ ", price= " + tf_price.getText()
+				+ ", ordered_date= '" + dp_date.getValue()
+				+ "', mem_id=(SELECT mem_id from members where mem_name='" + cb_family_member.getValue() + "')"
+				+ ", cat_id=(SELECT cat_id from categories where cat_name='" + cb_category.getValue() + "')"
+				+ " where id = " + currentlySelectedGrocery.getId();
 
 
 		executeMyQuery(query);
 		showGroceryInTable();
 	}
+
 
 	public void deleteGrocery() {
-		String query = "DELETE FROM grocery where id = "+currentlySelectedGrocery.getId() ;
 
-		executeMyQuery(query);
-		showGroceryInTable();
+		Alert alert = new Alert(Alert.AlertType.WARNING);
+		alert.setTitle("Delete?");
+		alert.setHeaderText("Your data is being deleted!!");
+		alert.setContentText("Are you sure you want to delete??");
+
+		Optional<ButtonType> result = alert.showAndWait();
+
+		if (result.isPresent()){
+			String query = "DELETE FROM grocery where id = " + currentlySelectedGrocery.getId();
+
+			executeMyQuery(query);
+			showGroceryInTable();
+		}
+
+
 	}
+
+
+	private boolean areFieldsEmpty() {
+
+		if (tf_item_name.getText().trim().isEmpty() || tf_price.getText().trim().isEmpty() || tf_quantity.getText().trim().isEmpty() || dp_date.getValue() == null || cb_family_member.getValue() == null || cb_category.getValue() == null)
+			return true;
+		else
+			return false;
+	}
+
 
 	private void executeMyQuery(String query) {
 		Connection conn = getConnection();
@@ -172,13 +259,18 @@ public class MainController implements Initializable {
 	@FXML
 	public void handleMouseAction(MouseEvent mouseEvent) {
 		currentlySelectedGrocery = tableView_grocery.getSelectionModel().getSelectedItem();
-		tf_item_name.setText(currentlySelectedGrocery.getItem_name());
-		tf_quantity.setText(currentlySelectedGrocery.getQuantity()+"");
-		tf_price.setText(currentlySelectedGrocery.getPrice()+"");
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-		LocalDate date = LocalDate.parse(currentlySelectedGrocery.getDate(), formatter);
-		dp_date.setValue(date);
-		cb_family_member.setValue(currentlySelectedGrocery.getOrderBy());
+
+		if (currentlySelectedGrocery != null) {
+			tf_item_name.setText(currentlySelectedGrocery.getItem_name());
+			tf_quantity.setText(currentlySelectedGrocery.getQuantity() + "");
+			tf_price.setText(currentlySelectedGrocery.getPrice() + "");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			LocalDate date = LocalDate.parse(currentlySelectedGrocery.getDate(), formatter);
+			dp_date.setValue(date);
+			cb_family_member.setValue(currentlySelectedGrocery.getOrderBy());
+			cb_category.setValue(currentlySelectedGrocery.getCategory());
+		}
+
 
 	}
 
@@ -191,8 +283,7 @@ public class MainController implements Initializable {
 			stage.setTitle("Edit Members");
 			stage.setScene(new Scene(root, 600, 400));
 			stage.show();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -203,8 +294,8 @@ public class MainController implements Initializable {
 
 		ObservableList<Members> membersObservableList = editMembers.getAllMembers();
 		ObservableList<String> comboBoxValues = FXCollections.observableArrayList();
-	//	ComboBox<Members> comboBox = new ComboBox<>(comboBoxValues);
-		for(Members members : membersObservableList) {
+		//	ComboBox<Members> comboBox = new ComboBox<>(comboBoxValues);
+		for (Members members : membersObservableList) {
 			comboBoxValues.add(members.getMemName());
 		}
 		cb_family_member.setItems(comboBoxValues);
