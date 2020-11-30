@@ -5,6 +5,7 @@ import com.dbmsproject.dataholders.Grocery;
 import com.dbmsproject.dataholders.Members;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -282,6 +283,7 @@ public class MainController implements Initializable {
 			Stage stage = new Stage();
 			stage.setTitle("Edit Members");
 			stage.setScene(new Scene(root, 600, 400));
+			stage.setResizable(false);
 			stage.show();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -302,4 +304,18 @@ public class MainController implements Initializable {
 	}
 
 
+	public void showStatistics(ActionEvent actionEvent) {
+		Parent root;
+		try {
+			root = FXMLLoader.load(getClass().getClassLoader().getResource("com/dbmsproject/fxml/statistics.fxml"));
+			Stage stage = new Stage();
+			stage.setTitle("Statistics");
+			stage.setScene(new Scene(root, 1000, 800));
+			stage.setResizable(false);
+			stage.show();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 }

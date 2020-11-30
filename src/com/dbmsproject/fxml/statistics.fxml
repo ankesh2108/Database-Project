@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="800.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dbmsproject.controller.Statistics">
+   <children>
+      <PieChart fx:id="member_wise_pie_chart" layoutY="81.0" prefHeight="395.0" prefWidth="513.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="81.0" />
+      <Label layoutX="447.0" layoutY="14.0" text="Statistics">
+         <font>
+            <Font name="Calibri Bold" size="36.0" />
+         </font>
+      </Label>
+      <PieChart layoutX="581.0" layoutY="117.0" prefHeight="323.0" prefWidth="410.0" />
+   </children>
+</AnchorPane>

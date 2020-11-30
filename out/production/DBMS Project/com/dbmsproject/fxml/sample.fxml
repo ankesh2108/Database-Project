@@ -11,8 +11,8 @@
     <children>
         <TableView fx:id="tableView_grocery" layoutY="313.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#handleMouseAction" prefHeight="254.0" prefWidth="1066.0" AnchorPane.bottomAnchor="84.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="313.0">
             <columns>
-                <TableColumn fx:id="col_id" minWidth="50.0" prefWidth="50.0" text="Id" />
-                <TableColumn fx:id="col_itemname" prefWidth="146.59999084472656" text="Item Name" />
+                <TableColumn fx:id="col_id" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" text="Id" />
+                <TableColumn fx:id="col_itemname" maxWidth="300.0" minWidth="300.0" prefWidth="300.0" text="Item Name" />
                 <TableColumn fx:id="col_quantity" prefWidth="126.39996337890625" text="Quantity" />
                 <TableColumn fx:id="col_price" prefWidth="69.20001220703125" text="Price" />
                 <TableColumn fx:id="col_date" prefWidth="70.0" text="Date" />
@@ -75,7 +75,7 @@
                                 <DropShadow color="GRAY" offsetX="3.0" offsetY="3.0" />
                             </effect>
                         </Button>
-                        <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="215.0" text="Statistics">
+                        <Button mnemonicParsing="false" onAction="#showStatistics" prefHeight="30.0" prefWidth="215.0" text="Statistics">
                             <padding>
                                 <Insets bottom="12.0" left="12.0" right="12.0" top="12.0" />
                             </padding>

@@ -142,9 +142,6 @@ public class EditMembers implements Initializable {
 	}
 
 
-	public void updateCombobox() {
-		MainController mainController = new MainController();
-		mainController.setMembersInComboBox();
-	}
+
 
 }
