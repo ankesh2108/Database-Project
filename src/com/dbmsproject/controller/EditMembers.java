@@ -1,5 +1,6 @@
 package com.dbmsproject.controller;
 
+import com.dbmsproject.connection.ManageConnection;
 import com.dbmsproject.dataholders.Members;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,43 +34,23 @@ public class EditMembers implements Initializable {
 
 	private Members currentlySelectedMember = null;
 
-
+	public ManageConnection manageConnection;
 
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		manageConnection = ManageConnection.createInstance();
+
 		showMembersInTable();
 
 	}
 
-
-
-
-
-	public Connection getConnection() {
-		Connection conn;
-		try {
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbmsproject?autoReconnect=true&useSSL=false", "root", "7887");
-			return conn;
-		} catch (Exception e) {
-			System.out.println("Error :" + e.getMessage());
-			return null;
-		}
-	}
-
-
 	public ObservableList<Members> getAllMembers() {
 		ObservableList<Members> allMembersList = FXCollections.observableArrayList();
-		Connection connection = getConnection();
-
-		Statement st;
-		ResultSet rs;
 		String query = "SELECT * FROM members";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
 		try {
-			st = connection.createStatement();
-			rs = st.executeQuery(query);
-
 			while (rs.next()) {
 
 				Members members = new Members(rs.getInt("mem_id"), rs.getString("mem_name"));
@@ -100,48 +81,29 @@ public class EditMembers implements Initializable {
 
 	public void addMember(String name) {
 		String query = "INSERT INTO members(mem_name) values('" + name + "')";
-
-		executeMyQuery(query);
+		manageConnection.executeUpdateQuery(query);
 		showMembersInTable();
-	//	updateCombobox();
 
-	}
-
-	private void executeMyQuery(String query) {
-		Connection conn = getConnection();
-		Statement st;
-
-		try {
-			st = conn.createStatement();
-			st.executeUpdate(query);
-
-		} catch (SQLException throwable) {
-			throwable.printStackTrace();
-		}
 	}
 
 	public void deleteMember(ActionEvent actionEvent) {
 		String query = "DELETE FROM members where mem_id = " + currentlySelectedMember.getMem_id();
-		executeMyQuery(query);
+		manageConnection.executeUpdateQuery(query);
 		showMembersInTable();
-		//updateCombobox();
 	}
 
 
 	public void showMembersInTable() {
 		ObservableList<Members> allmembersList = getAllMembers();
-
 		col_sr_no.setCellValueFactory(new PropertyValueFactory<Members, Integer>("mem_id"));
 		col_member_name.setCellValueFactory(new PropertyValueFactory<Members, String>("memName"));
-
 		tv_members.setItems(allmembersList);
 	}
+
 
 	public void handleMouseAction(MouseEvent mouseEvent) {
 		currentlySelectedMember = tv_members.getSelectionModel().getSelectedItem();
 	}
-
-
 
 
 }

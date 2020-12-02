@@ -1,0 +1,20 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="DBMS Project">
+    <output-path>$PROJECT_DIR$/out/artifacts/DBMS_Project</output-path>
+    <properties id="javafx-properties">
+      <options>
+        <option name="appClass" value="com.dbmsproject.Main" />
+        <option name="description" value="" />
+        <option name="htmlPlaceholderId" value="" />
+        <option name="title" value="" />
+        <option name="vendor" value="" />
+        <option name="version" value="" />
+      </options>
+    </properties>
+    <root id="root">
+      <element id="archive" name="DBMS_Project.jar">
+        <element id="module-output" name="DBMS Project" />
+      </element>
+    </root>
+  </artifact>
+</component>

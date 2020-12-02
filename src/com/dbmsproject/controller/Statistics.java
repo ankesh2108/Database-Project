@@ -1,5 +1,6 @@
 package com.dbmsproject.controller;
 
+import com.dbmsproject.connection.ManageConnection;
 import com.dbmsproject.dataholders.Categories;
 import com.dbmsproject.dataholders.DataForPieChart;
 import com.dbmsproject.dataholders.Members;
@@ -21,7 +22,7 @@ import java.util.ResourceBundle;
 public class Statistics implements Initializable {
 
 	@FXML
-	private  TextField total_amt_spent;
+	private TextField total_amt_spent;
 	@FXML
 	private ComboBox mem_combobox;
 	@FXML
@@ -36,10 +37,13 @@ public class Statistics implements Initializable {
 	@FXML
 	private PieChart category_wise_pie_chart;
 
-
+	private ManageConnection manageConnection;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		manageConnection = ManageConnection.createInstance();
+
+
 		populateDataInMemberwisePiechart();
 		populateDataInCategoryWisePiechart();
 		prepareCategoryData();
@@ -51,14 +55,13 @@ public class Statistics implements Initializable {
 	private void prepareCategoryData() {
 		ObservableList<String> categoriesComBox = FXCollections.observableArrayList();
 		String query = "SELECT cat_name FROM categories";
-		ResultSet rs = executeMyQuery(query);
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
-		try{
+		try {
 			while (rs.next()) {
 				categoriesComBox.add(rs.getString(1));
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 
@@ -66,65 +69,60 @@ public class Statistics implements Initializable {
 	}
 
 	public void calcValueForCategory(javafx.event.ActionEvent actionEvent) {
-		String query = "SELECT count(id) from grocery where cat_id=(select cat_id from categories where cat_name = '"+category_combobox.getValue().toString()+"')";
-		ResultSet rs = executeMyQuery(query);
+		String query = "SELECT count(id) from grocery where cat_id=(select cat_id from categories where cat_name = '" + category_combobox.getValue().toString() + "')";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
-		try{
+		try {
 			while (rs.next()) {
-				tf_no_in_category.setText(rs.getInt(1)+"");
+				tf_no_in_category.setText(rs.getInt(1) + "");
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 	}
 
 
-
-
 	private void prepareMemberData() {
-		EditMembers editMembers = new EditMembers();
-
-		ObservableList<Members> membersObservableList = editMembers.getAllMembers();
 		ObservableList<String> comboBoxValues = FXCollections.observableArrayList();
-		//	ComboBox<Members> comboBox = new ComboBox<>(comboBoxValues);
-		for (Members members : membersObservableList) {
-			comboBoxValues.add(members.getMemName());
+		String query = "SELECT mem_name FROM members";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
+		try {
+			while (rs.next()) {
+				comboBoxValues.add(rs.getString(1));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		mem_combobox.setItems(comboBoxValues);
 
 	}
 
 	public void calcValueForMember(javafx.event.ActionEvent actionEvent) {
-		String query = "SELECT count(id) from grocery where mem_id=(select mem_id from members where mem_name = '"+mem_combobox.getValue().toString()+"')";
-		ResultSet rs = executeMyQuery(query);
+		String query = "SELECT count(id) from grocery where mem_id=(select mem_id from members where mem_name = '" + mem_combobox.getValue().toString() + "')";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
-		try{
+		try {
 			while (rs.next()) {
-				tf_items_by_members.setText(rs.getInt(1)+"");
+				tf_items_by_members.setText(rs.getInt(1) + "");
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 	}
-
 
 
 	private void calcTotalAmountSpent() {
 		String query = "SELECT round(sum(price), 2) from grocery";
-		ResultSet rs = executeMyQuery(query);
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
 		try {
 			while (rs.next()) {
-				total_amt_spent.setText(rs.getFloat(1)+"");
+				total_amt_spent.setText(rs.getFloat(1) + "");
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 	}
-
 
 
 	private void populateDataInCategoryWisePiechart() {
@@ -132,7 +130,7 @@ public class Statistics implements Initializable {
 		ObservableList<DataForPieChart> categoryWiseData = getData("categories", "cat_name", "cat_id");
 		ObservableList<PieChart.Data> categoryWisePieChartData = FXCollections.observableArrayList();
 
-		for(DataForPieChart dataForPieChart : categoryWiseData) {
+		for (DataForPieChart dataForPieChart : categoryWiseData) {
 			PieChart.Data pieData = new PieChart.Data(dataForPieChart.getName(), dataForPieChart.getMoney());
 			categoryWisePieChartData.add(pieData);
 		}
@@ -155,12 +153,9 @@ public class Statistics implements Initializable {
 	}
 
 
-
-
 	public void populateDataInMemberwisePiechart() {
 		ObservableList<DataForPieChart> memberWiseData = getData("members", "mem_name", "mem_id");
 		ObservableList<PieChart.Data> memberwisePieChartData = FXCollections.observableArrayList();
-
 
 
 		for (DataForPieChart dataForPieChart : memberWiseData) {
@@ -193,8 +188,8 @@ public class Statistics implements Initializable {
 		ObservableList<DataForPieChart> memberWiseData = FXCollections.observableArrayList();
 		ResultSet rs;
 
-		String query = "SELECT "+ tableName+"."+varName+", ROUND(SUM(grocery.price), 2) FROM grocery JOIN "+tableName+" ON grocery."+varId+" = "+tableName+"."+varId+" GROUP By "+tableName+"."+varName;
-		rs = executeMyQuery(query);
+		String query = "SELECT " + tableName + "." + varName + ", ROUND(SUM(grocery.price), 2) FROM grocery JOIN " + tableName + " ON grocery." + varId + " = " + tableName + "." + varId + " GROUP By " + tableName + "." + varName;
+		rs = manageConnection.executeQueryForResult(query);
 
 		try {
 			while (rs.next()) {
@@ -207,37 +202,5 @@ public class Statistics implements Initializable {
 
 		return memberWiseData;
 	}
-
-
-
-	public Connection getConnection() {
-		Connection conn;
-		try {
-
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbmsproject?autoReconnect=true&useSSL=false", "root", "7887");
-		
-			return conn;
-		} catch (Exception e) {
-			System.out.println("Error :" + e.getMessage());
-			return null;
-		}
-	}
-
-
-	private ResultSet executeMyQuery(String query) {
-		Connection conn = getConnection();
-		Statement st;
-		ResultSet rs=null;
-
-		try {
-			st = conn.createStatement();
-			rs  = st.executeQuery(query);
-
-		} catch (SQLException throwable) {
-			throwable.printStackTrace();
-		}
-		return rs;
-	}
-
 
 }

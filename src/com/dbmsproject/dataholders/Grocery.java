@@ -21,7 +21,6 @@ public class Grocery {
 	}
 
 
-
 	public int getId() {
 		return id;
 	}

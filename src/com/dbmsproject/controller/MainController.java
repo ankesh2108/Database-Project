@@ -1,8 +1,11 @@
 package com.dbmsproject.controller;
 
+import com.dbmsproject.connection.ManageConnection;
 import com.dbmsproject.dataholders.Categories;
 import com.dbmsproject.dataholders.Grocery;
 import com.dbmsproject.dataholders.Members;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,6 +29,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainController implements Initializable {
+
 
 	@FXML
 	private ComboBox cb_category;
@@ -64,26 +68,26 @@ public class MainController implements Initializable {
 
 	private Grocery currentlySelectedGrocery = null;
 
+	public ManageConnection manageConnection;
+
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		manageConnection = ManageConnection.createInstance();
+
 		showGroceryInTable();
 		setMembersInComboBox();
 		setCategoriesInComboBox();
+
 	}
 
 	private void setCategoriesInComboBox() {
 
 		ObservableList<Categories> allCategoriesList = FXCollections.observableArrayList();
-		Connection connection = getConnection();
-
-		Statement st;
-		ResultSet rs;
 		String query = "SELECT * FROM categories";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
 
 		try {
-			st = connection.createStatement();
-			rs = st.executeQuery(query);
-
 			while (rs.next()) {
 
 				Categories categories = new Categories(rs.getInt("cat_id"), rs.getString("cat_name"));
@@ -101,19 +105,8 @@ public class MainController implements Initializable {
 		cb_category.setItems(categoriesComBox);
 	}
 
-
-	public Connection getConnection() {
-		Connection conn;
-		try {
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbmsproject?autoReconnect=true&useSSL=false", "root", "7887");
-			return conn;
-		} catch (Exception e) {
-			System.out.println("Error :" + e.getMessage());
-			return null;
-		}
-	}
-
 	public void showGroceryInTable() {
+
 		ObservableList<Grocery> groceryList = getAllGroceries();
 
 		col_id.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("id"));
@@ -125,25 +118,19 @@ public class MainController implements Initializable {
 		col_category.setCellValueFactory(new PropertyValueFactory<Grocery, String>("category"));
 
 		tableView_grocery.setItems(groceryList);
+		col_id.setSortType(TableColumn.SortType.ASCENDING);
+		tableView_grocery.getSortOrder().add(col_id);
+		tableView_grocery.sort();
 	}
 
 
 	public ObservableList<Grocery> getAllGroceries() {
-
-
 		ObservableList<Grocery> groceryObservableList = FXCollections.observableArrayList();
-
-		Connection conn = getConnection();
-		//String query1 = "SELECT * FROM grocery";
 		String query = "SELECT grocery.id, grocery.item_name, grocery.quantity, grocery.price, grocery.ordered_date, members.mem_name, categories.cat_name FROM grocery JOIN members JOIN categories ON grocery.mem_id = members.mem_id AND grocery.cat_id = categories.cat_id";
-		Statement st;
-		ResultSet resultSet;
+		ResultSet resultSet = manageConnection.executeQueryForResult(query);
 
 
 		try {
-			st = conn.createStatement();
-			resultSet = st.executeQuery(query);
-
 			while (resultSet.next()) {
 				Grocery grocery = new Grocery(resultSet.getInt("id"),
 						resultSet.getString("item_name"),
@@ -175,9 +162,29 @@ public class MainController implements Initializable {
 			return;
 		}
 
+		if (!tf_quantity.getText().matches("\\d*")) {
+			tf_quantity.setText("");
+			Alert alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setTitle("Illegal Data");
+			alert.setHeaderText(null);
+			alert.setContentText("Data you entered in the quantity field is not appropriate\n Should be an integer.");
+			alert.showAndWait();
+			return;
+		}
+
+		if (!tf_price.getText().matches("[+-]?\\d+(\\.\\d+)?([Ee][+-]?\\d+)?")) {
+			tf_price.setText("");
+			Alert alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setTitle("Illegal Data");
+			alert.setHeaderText(null);
+			alert.setContentText("Data you entered in the price field is not appropriate\n Should be an integer or decimal.");
+			alert.showAndWait();
+			return;
+		}
+
+
 
 		String date = dp_date.getValue() + "";
-
 		String query = "INSERT INTO grocery(item_name, quantity, price, ordered_date, mem_id, cat_id) values('" + tf_item_name.getText() + "',"
 				+ tf_quantity.getText() + ","
 				+ tf_price.getText() + ",'"
@@ -185,7 +192,7 @@ public class MainController implements Initializable {
 				+ "(SELECT mem_id FROM members WHERE mem_name = '" + cb_family_member.getValue() + "'),"
 				+ "(SELECT cat_id FROM categories WHERE cat_name = '" + cb_category.getValue() + "'))";
 
-		executeMyQuery(query);
+		manageConnection.executeUpdateQuery(query);
 		showGroceryInTable();
 	}
 
@@ -200,7 +207,6 @@ public class MainController implements Initializable {
 			return;
 		}
 
-
 		String query = "UPDATE grocery set item_name = '" + tf_item_name.getText()
 				+ "', quantity= " + tf_quantity.getText()
 				+ ", price= " + tf_price.getText()
@@ -210,7 +216,7 @@ public class MainController implements Initializable {
 				+ " where id = " + currentlySelectedGrocery.getId();
 
 
-		executeMyQuery(query);
+		manageConnection.executeUpdateQuery(query);
 		showGroceryInTable();
 	}
 
@@ -224,10 +230,10 @@ public class MainController implements Initializable {
 
 		Optional<ButtonType> result = alert.showAndWait();
 
-		if (result.isPresent()){
+		if (result.isPresent()) {
 			String query = "DELETE FROM grocery where id = " + currentlySelectedGrocery.getId();
 
-			executeMyQuery(query);
+			manageConnection.executeUpdateQuery(query);
 			showGroceryInTable();
 		}
 
@@ -243,19 +249,6 @@ public class MainController implements Initializable {
 			return false;
 	}
 
-
-	private void executeMyQuery(String query) {
-		Connection conn = getConnection();
-		Statement st;
-
-		try {
-			st = conn.createStatement();
-			st.executeUpdate(query);
-
-		} catch (SQLException throwable) {
-			throwable.printStackTrace();
-		}
-	}
 
 	@FXML
 	public void handleMouseAction(MouseEvent mouseEvent) {
@@ -292,14 +285,7 @@ public class MainController implements Initializable {
 
 
 	public void setMembersInComboBox() {
-		EditMembers editMembers = new EditMembers();
-
-		ObservableList<Members> membersObservableList = editMembers.getAllMembers();
-		ObservableList<String> comboBoxValues = FXCollections.observableArrayList();
-		//	ComboBox<Members> comboBox = new ComboBox<>(comboBoxValues);
-		for (Members members : membersObservableList) {
-			comboBoxValues.add(members.getMemName());
-		}
+		ObservableList<String> comboBoxValues = getMembersList();
 		cb_family_member.setItems(comboBoxValues);
 	}
 
@@ -317,5 +303,21 @@ public class MainController implements Initializable {
 			e.printStackTrace();
 		}
 
+	}
+
+
+	public ObservableList<String> getMembersList() {
+		ObservableList<String> membersList = FXCollections.observableArrayList();
+		String query = "SELECT mem_name FROM members";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
+
+		try {
+			while (rs.next()) {
+				membersList.add(rs.getString(1));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return membersList;
 	}
 }
