@@ -16,6 +16,7 @@ import javafx.stage.Window;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.ResultSet;
 import java.util.ResourceBundle;
 
 public class LoginScreen implements Initializable {
@@ -30,10 +31,15 @@ public class LoginScreen implements Initializable {
 
 	private ManageConnection manageConnection;
 
+	private String username;
+	private String password;
+
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		manageConnection = ManageConnection.createInstance();
 		label_show_error.setText("");
+
 	}
 
 
@@ -44,14 +50,33 @@ public class LoginScreen implements Initializable {
 			return;
 		}
 
-		
+		String query = "SELECT admin_username, a_password FROM admin WHERE admin_username LIKE '" + tf_username.getText().trim() + "'";
+		ResultSet resultSet = manageConnection.executeQueryForResult(query);
 
-		Parent main_window = FXMLLoader.load(getClass().getClassLoader().getResource("com/dbmsproject/fxml/main_window.fxml"));
-		Scene main_window_scene = new Scene(main_window, 1200, 800);
-		Stage app_stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-		app_stage.setScene(main_window_scene);
-		app_stage.setResizable(false);
-		app_stage.show();
+		try {
+			if (resultSet.isBeforeFirst()) {
+				resultSet.next();
+
+				username = resultSet.getString(1);
+				password = resultSet.getString(2);
+
+				if (password.equals(tf_password.getText().trim())) {
+					Parent main_window = FXMLLoader.load(getClass().getClassLoader().getResource("com/dbmsproject/fxml/main_window.fxml"));
+					Scene main_window_scene = new Scene(main_window, 1200, 800);
+					Stage app_stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+					app_stage.setScene(main_window_scene);
+					app_stage.setResizable(false);
+					app_stage.show();
+				} else {
+					label_show_error.setText("password incorrect");
+				}
+			} else {
+				label_show_error.setText("username doesn't exist");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private boolean areFieldsEmpty() {
