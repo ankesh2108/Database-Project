@@ -19,6 +19,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.io.IOException;
 import java.net.URL;
@@ -68,7 +69,7 @@ public class MainController implements Initializable {
 
 	private Grocery currentlySelectedGrocery = null;
 
-	public ManageConnection manageConnection;
+	private ManageConnection manageConnection;
 
 
 	@Override
@@ -78,38 +79,74 @@ public class MainController implements Initializable {
 		showGroceryInTable();
 		setMembersInComboBox();
 		setCategoriesInComboBox();
-
 	}
 
-	private void setCategoriesInComboBox() {
 
-		ObservableList<Categories> allCategoriesList = FXCollections.observableArrayList();
-		String query = "SELECT * FROM categories";
+	/*
+	 *
+	 *  This function will fetch all the values in categories table and will display them in combobox
+	 * */
+	private void setCategoriesInComboBox() {
+		ObservableList<String> allCategoriesList = FXCollections.observableArrayList();
+		String query = "SELECT cat_name FROM categories";
 		ResultSet rs = manageConnection.executeQueryForResult(query);
 
 		try {
 			while (rs.next()) {
-
-				Categories categories = new Categories(rs.getInt("cat_id"), rs.getString("cat_name"));
-				allCategoriesList.add(categories);
+				allCategoriesList.add(rs.getString(1));
 			}
 		} catch (SQLException throwables) {
 			throwables.printStackTrace();
 		}
 
-		ObservableList<String> categoriesComBox = FXCollections.observableArrayList();
-
-		for (Categories categories : allCategoriesList) {
-			categoriesComBox.add(categories.getCat_name());
-		}
-		cb_category.setItems(categoriesComBox);
+		cb_category.setItems(allCategoriesList);
 	}
 
-	public void showGroceryInTable() {
 
+	/*
+	 *
+	 * This function will get the data from getAllGroceries() function and will display them in tableview_grocery TableView
+	 * */
+
+	public void showGroceryInTable() {
 		ObservableList<Grocery> groceryList = getAllGroceries();
 
+
 		col_id.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("id"));
+		col_id.setCellFactory(new Callback<TableColumn<Grocery, Integer>, TableCell<Grocery, Integer>>() {
+			@Override
+			public TableCell<Grocery, Integer> call(TableColumn<Grocery, Integer> param) {
+				return new TableCell<Grocery, Integer>() {
+					@Override
+					protected void updateItem(Integer item, boolean empty) {
+						super.updateItem(item, empty);
+						if(this.getTableRow()!= null && item!=null) {
+							setText(this.getTableRow().getIndex()+"");
+						} else{
+							setText("");
+						}
+					}
+				};
+			}
+		});
+
+		/*col_id.setCellFactory(new Callback<TableColumn<Grocery, Person>, TableCell<Person, Person>>() {
+			@Override public TableCell<Person, Person> call(TableColumn<Person, Person> param) {
+				return new TableCell<Person, Person>() {
+					@Override protected void updateItem(Person item, boolean empty) {
+						super.updateItem(item, empty);
+
+						if (this.getTableRow() != null && item != null) {
+							setText(this.getTableRow().getIndex()+"");
+						} else {
+							setText("");
+						}
+					}
+				};
+			}
+		});*/
+
+
 		col_itemname.setCellValueFactory(new PropertyValueFactory<Grocery, String>("item_name"));
 		col_quantity.setCellValueFactory(new PropertyValueFactory<Grocery, Integer>("quantity"));
 		col_price.setCellValueFactory(new PropertyValueFactory<Grocery, Float>("price"));
@@ -118,17 +155,23 @@ public class MainController implements Initializable {
 		col_category.setCellValueFactory(new PropertyValueFactory<Grocery, String>("category"));
 
 		tableView_grocery.setItems(groceryList);
-		col_id.setSortType(TableColumn.SortType.ASCENDING);
-		tableView_grocery.getSortOrder().add(col_id);
-		tableView_grocery.sort();
+		//col_id.setSortType(TableColumn.SortType.ASCENDING);
+	//	tableView_grocery.getSortOrder().add(col_id);
+		//tableView_grocery.sort();
 	}
 
+
+
+
+	/*
+	 *
+	 * This function will fetch all the data in grocery table
+	 * */
 
 	public ObservableList<Grocery> getAllGroceries() {
 		ObservableList<Grocery> groceryObservableList = FXCollections.observableArrayList();
 		String query = "SELECT grocery.id, grocery.item_name, grocery.quantity, grocery.price, grocery.ordered_date, members.mem_name, categories.cat_name FROM grocery JOIN members JOIN categories ON grocery.mem_id = members.mem_id AND grocery.cat_id = categories.cat_id";
 		ResultSet resultSet = manageConnection.executeQueryForResult(query);
-
 
 		try {
 			while (resultSet.next()) {
@@ -142,7 +185,6 @@ public class MainController implements Initializable {
 
 				groceryObservableList.add(grocery);
 			}
-
 		} catch (SQLException throwable) {
 			throwable.printStackTrace();
 		}
@@ -151,8 +193,11 @@ public class MainController implements Initializable {
 	}
 
 
+	/*
+	 *
+	 * This function will take the user entered value from the interface and will add them to database tables
+	 * */
 	public void insertGrocery() {
-
 		if (areFieldsEmpty()) {
 			Alert alert = new Alert(Alert.AlertType.WARNING);
 			alert.setTitle("Empty fields");
@@ -182,8 +227,6 @@ public class MainController implements Initializable {
 			return;
 		}
 
-
-
 		String date = dp_date.getValue() + "";
 		String query = "INSERT INTO grocery(item_name, quantity, price, ordered_date, mem_id, cat_id) values('" + tf_item_name.getText() + "',"
 				+ tf_quantity.getText() + ","
@@ -197,6 +240,10 @@ public class MainController implements Initializable {
 	}
 
 
+	/*
+	 *
+	 * This function is used for updating the values in tables
+	 * */
 	public void updateGrocery() {
 		if (areFieldsEmpty()) {
 			Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -215,12 +262,15 @@ public class MainController implements Initializable {
 				+ ", cat_id=(SELECT cat_id from categories where cat_name='" + cb_category.getValue() + "')"
 				+ " where id = " + currentlySelectedGrocery.getId();
 
-
 		manageConnection.executeUpdateQuery(query);
 		showGroceryInTable();
 	}
 
 
+	/*
+	 *
+	 * This function is used for deleting the values from table
+	 * */
 	public void deleteGrocery() {
 
 		Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -236,11 +286,13 @@ public class MainController implements Initializable {
 			manageConnection.executeUpdateQuery(query);
 			showGroceryInTable();
 		}
-
-
 	}
 
 
+	/*
+	 *
+	 * This function will return true if user doesn't enter any value in textfield
+	 * */
 	private boolean areFieldsEmpty() {
 
 		if (tf_item_name.getText().trim().isEmpty() || tf_price.getText().trim().isEmpty() || tf_quantity.getText().trim().isEmpty() || dp_date.getValue() == null || cb_family_member.getValue() == null || cb_category.getValue() == null)
@@ -250,6 +302,10 @@ public class MainController implements Initializable {
 	}
 
 
+	/*
+	 *
+	 * This function is helping to get the item which is selected in TableView it will store that data in currentlySelectedGrocery
+	 * */
 	@FXML
 	public void handleMouseAction(MouseEvent mouseEvent) {
 		currentlySelectedGrocery = tableView_grocery.getSelectionModel().getSelectedItem();
@@ -264,11 +320,13 @@ public class MainController implements Initializable {
 			cb_family_member.setValue(currentlySelectedGrocery.getOrderBy());
 			cb_category.setValue(currentlySelectedGrocery.getCategory());
 		}
-
-
 	}
 
 
+	/*
+	 *
+	 * This function will open the Edit Members window
+	 * */
 	public void editMembers() {
 		Parent root;
 		try {
@@ -284,12 +342,20 @@ public class MainController implements Initializable {
 	}
 
 
+	/*
+	 *
+	 * It will fetch data from members table and will populate that in members conbobox
+	 * */
 	public void setMembersInComboBox() {
 		ObservableList<String> comboBoxValues = getMembersList();
 		cb_family_member.setItems(comboBoxValues);
 	}
 
 
+	/*
+	 *
+	 * This function will open the Statistics window
+	 * */
 	public void showStatistics(ActionEvent actionEvent) {
 		Parent root;
 		try {
@@ -302,10 +368,13 @@ public class MainController implements Initializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 
+	/*
+	 *
+	 * It will return the list of memners from members table
+	 * */
 	public ObservableList<String> getMembersList() {
 		ObservableList<String> membersList = FXCollections.observableArrayList();
 		String query = "SELECT mem_name FROM members";
@@ -320,4 +389,5 @@ public class MainController implements Initializable {
 		}
 		return membersList;
 	}
+
 }

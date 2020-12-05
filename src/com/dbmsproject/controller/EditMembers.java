@@ -7,12 +7,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Callback;
 
 
 import java.net.URL;
@@ -96,6 +94,22 @@ public class EditMembers implements Initializable {
 	public void showMembersInTable() {
 		ObservableList<Members> allmembersList = getAllMembers();
 		col_sr_no.setCellValueFactory(new PropertyValueFactory<Members, Integer>("mem_id"));
+		col_sr_no.setCellFactory(new Callback<TableColumn<Members, Integer>, TableCell<Members, Integer>>() {
+			@Override
+			public TableCell<Members, Integer> call(TableColumn<Members, Integer> param) {
+				return new TableCell<Members, Integer>(){
+					@Override
+					protected void updateItem(Integer item, boolean empty) {
+						super.updateItem(item, empty);
+						if(this.getTableRow()!= null && item!=null) {
+							setText(this.getTableRow().getIndex()+"");
+						} else{
+							setText("");
+						}
+					}
+				};
+			}
+		});
 		col_member_name.setCellValueFactory(new PropertyValueFactory<Members, String>("memName"));
 		tv_members.setItems(allmembersList);
 	}

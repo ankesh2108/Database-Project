@@ -43,20 +43,21 @@ public class Statistics implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		manageConnection = ManageConnection.createInstance();
 
-
 		populateDataInMemberwisePiechart();
 		populateDataInCategoryWisePiechart();
-		prepareCategoryData();
-		prepareMemberData();
+		setCategoriesInComboBox();
+		setMembersInComboBox();
 		calcTotalAmountSpent();
-
 	}
 
-	private void prepareCategoryData() {
+	/*
+	 *
+	 *  This function will fetch all the values in categories table and will display them in combobox
+	 * */
+	private void setCategoriesInComboBox() {
 		ObservableList<String> categoriesComBox = FXCollections.observableArrayList();
 		String query = "SELECT cat_name FROM categories";
 		ResultSet rs = manageConnection.executeQueryForResult(query);
-
 		try {
 			while (rs.next()) {
 				categoriesComBox.add(rs.getString(1));
@@ -64,25 +65,16 @@ public class Statistics implements Initializable {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-
 		category_combobox.setItems(categoriesComBox);
 	}
 
-	public void calcValueForCategory(javafx.event.ActionEvent actionEvent) {
-		String query = "SELECT count(id) from grocery where cat_id=(select cat_id from categories where cat_name = '" + category_combobox.getValue().toString() + "')";
-		ResultSet rs = manageConnection.executeQueryForResult(query);
-
-		try {
-			while (rs.next()) {
-				tf_no_in_category.setText(rs.getInt(1) + "");
-			}
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-	}
 
 
-	private void prepareMemberData() {
+	/*
+	*
+	* It will fetch data from members table and will populate that in members conbobox
+	* */
+	private void setMembersInComboBox() {
 		ObservableList<String> comboBoxValues = FXCollections.observableArrayList();
 		String query = "SELECT mem_name FROM members";
 		ResultSet rs = manageConnection.executeQueryForResult(query);
@@ -94,13 +86,32 @@ public class Statistics implements Initializable {
 			e.printStackTrace();
 		}
 		mem_combobox.setItems(comboBoxValues);
-
 	}
+
+
+
+	/*
+	*
+	*
+	* */
+	public void calcValueForCategory(javafx.event.ActionEvent actionEvent) {
+		String query = "SELECT count(id) from grocery where cat_id=(select cat_id from categories where cat_name = '" + category_combobox.getValue().toString() + "')";
+		ResultSet rs = manageConnection.executeQueryForResult(query);
+		try {
+			while (rs.next()) {
+				tf_no_in_category.setText(rs.getInt(1) + "");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+
+
 
 	public void calcValueForMember(javafx.event.ActionEvent actionEvent) {
 		String query = "SELECT count(id) from grocery where mem_id=(select mem_id from members where mem_name = '" + mem_combobox.getValue().toString() + "')";
 		ResultSet rs = manageConnection.executeQueryForResult(query);
-
 		try {
 			while (rs.next()) {
 				tf_items_by_members.setText(rs.getInt(1) + "");
@@ -114,7 +125,6 @@ public class Statistics implements Initializable {
 	private void calcTotalAmountSpent() {
 		String query = "SELECT round(sum(price), 2) from grocery";
 		ResultSet rs = manageConnection.executeQueryForResult(query);
-
 		try {
 			while (rs.next()) {
 				total_amt_spent.setText(rs.getFloat(1) + "");
@@ -126,7 +136,6 @@ public class Statistics implements Initializable {
 
 
 	private void populateDataInCategoryWisePiechart() {
-
 		ObservableList<DataForPieChart> categoryWiseData = getData("categories", "cat_name", "cat_id");
 		ObservableList<PieChart.Data> categoryWisePieChartData = FXCollections.observableArrayList();
 
@@ -136,7 +145,6 @@ public class Statistics implements Initializable {
 		}
 
 		category_wise_pie_chart.setData(categoryWisePieChartData);
-
 		category_wise_pie_chart.setTitle("Category wise total money spent");
 		category_wise_pie_chart.setClockwise(true);
 		category_wise_pie_chart.setLabelLineLength(10);
@@ -164,8 +172,6 @@ public class Statistics implements Initializable {
 		}
 
 		member_wise_pie_chart.setData(memberwisePieChartData);
-
-
 		member_wise_pie_chart.setTitle("Member wise total money spent");
 		member_wise_pie_chart.setClockwise(true);
 		member_wise_pie_chart.setLabelLineLength(10);
@@ -179,7 +185,6 @@ public class Statistics implements Initializable {
 						)
 				)
 		);
-
 	}
 
 
